@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Çevre Değişkenleri ve Gizli Dosyalar (ASLA PAYLAŞILMAZ)
+.env
+.env.*
+!.env.example
+session.json
+
+# Playwright & Tarayıcı kalıntıları
+.playwright/
+test-results/
+playwright-report/
+
+# Debug ve Test çıktıları
+debug_*.py
+test_*.py
+check_*.py
+*.png
+*.log
+
+# İşletim sistemi çöpleri
+.DS_Store
+Thumbs.db
