@@ -24,7 +24,7 @@ Bu projeyi çalıştırmadan önce lütfen aşağıdaki kısıtlamaları ve gere
 
 ### 1. Depoyu Klonlayın ve Bağımlılıkları Yükleyin
 ```bash
-git clone https://github.com/KULLANICI_ADINIZ/quiz-maker-agent.git
+git clone https://github.com/cirutsohtorik/quiz-maker-agent.git
 cd quiz-maker-agent
 
 pip install -r requirements.txt
