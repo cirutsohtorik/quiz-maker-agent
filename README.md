@@ -53,16 +53,32 @@ python quiz_agent.py
 ```bash
 python quiz_agent.py
 ```
-Ajan sizden konuyu sorar, soruları ve GIF'leri hazırlar, Quiz.com'da taslağı açar ve kontrol etmeniz için düzenleme linkini sunar.
+Ajan sizden sırasıyla:
+1. **Quiz konusunu** ister (Örn: *Formula 1 & Süper Kahramanlar*).
+2. **Zorluk seviyesini (1-7)** seçmenizi ister (Doğrudan ENTER'a basarsanız varsayılan olarak **[4] Kolay-Orta** seçilir).
 
-### B) Tek Satırda Konu Belirterek Çalıştırma
+#### 🎚️ 7 Farklı Zorluk Kombinasyonu & Akıllı Harmanlama (Shuffle):
+| No | Zorluk Modu | Soru Dağılımı | Sıralama Mantığı |
+|:---:|:---|:---|:---|
+| **[1]** | Kolay | 20 Kolay | Tamamı rahat ve eğlenceli |
+| **[2]** | Orta | 20 Orta | Rekabetçi ve dengeli |
+| **[3]** | Zor | 20 Zor | İddialı ve detay bilgi |
+| **[4]** | **Kolay - Orta (Varsayılan)** | 10 Kolay + 10 Orta | **Peş peşe aynı zorluk gelmez (1 Kolay, 1 Orta...)** |
+| **[5]** | Orta - Zor | 10 Orta + 10 Zor | **Peş peşe aynı zorluk gelmez (1 Orta, 1 Zor...)** |
+| **[6]** | Kolay - Zor | 10 Kolay + 10 Zor | **Peş peşe aynı zorluk gelmez (1 Kolay, 1 Zor...)** |
+| **[7]** | Kolay - Orta - Zor | 7 Kolay + 7 Orta + 6 Zor | **Döngüsel harmanlama (Kolay, Orta, Zor...)** |
+
+> 💡 **Akıllı Karıştırma Garantisi (Anti-Clustering):** Çoklu zorluk seçildiğinde, sorular yarışma boyunca aynı zorluklar üst üste yığılmayacak şekilde otomatik olarak harmanlanır.
+
+### B) Tek Satırda Konu ve Zorluk Belirterek Çalıştırma
 ```bash
-python quiz_agent.py --topic "90'lar Türkçe Pop ve Rock"
+python quiz_agent.py --topic "90'lar Türkçe Pop ve Rock" --difficulty 4
 ```
+*(1: Kolay, 2: Orta, 3: Zor, 4: Kolay-Orta, 5: Orta-Zor, 6: Kolay-Zor, 7: Kolay-Orta-Zor)*
 
 ### C) Onay Adımını Atlayıp Doğrudan Canlı Lobi Açma
 ```bash
-python quiz_agent.py --topic "Marvel ve DC Evreni" --auto-host
+python quiz_agent.py --topic "Marvel ve DC Evreni" --difficulty 7 --auto-host
 ```
 
 ### D) Tarayıcı Hareketlerini Ekranda Canlı İzleme (Headed Mod)

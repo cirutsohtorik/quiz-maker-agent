@@ -10,7 +10,7 @@ from typing import Optional
 
 import config
 from setup_session import ensure_quizcom_session
-from modules.question_generator import generate_quiz_questions
+from modules.question_generator import generate_quiz_questions, DIFFICULTY_PRESETS
 from modules.quizcom_automator import QuizComAutomator
 
 
@@ -51,7 +51,33 @@ def ensure_gemini_api_key() -> str:
     return api_key
 
 
-def run_quiz_agent(topic: Optional[str] = None, auto_host: bool = False, headless: bool = True):
+def ask_difficulty_level(default: int = 4) -> int:
+    """
+    Kullanıcıya 7 farklı zorluk kombinasyonunu sunar ve seçimini alır.
+    Boş bırakılırsa (ENTER) varsayılan olarak 4 (Kolay - Orta) seçilir.
+    """
+    print("\n" + "-" * 65)
+    print("🎯 ZORLUK SEVİYESİ SEÇİN:")
+    for key, val in DIFFICULTY_PRESETS.items():
+        suffix = " [Varsayılan]" if key == default else ""
+        print(f" [{key}] {val['name']:<20} ({val['description']}){suffix}")
+    print("-" * 65)
+
+    while True:
+        choice_str = input(f"👉 Seçiminiz (1-7) [Varsayılan: {default}]: ").strip()
+        if not choice_str:
+            return default
+        if choice_str.isdigit() and int(choice_str) in DIFFICULTY_PRESETS:
+            return int(choice_str)
+        print("⚠️ Lütfen 1 ile 7 arasında geçerli bir numara girin.")
+
+
+def run_quiz_agent(
+    topic: Optional[str] = None,
+    difficulty: Optional[int] = None,
+    auto_host: bool = False,
+    headless: bool = True
+):
     print_banner()
 
     # 1. API Anahtarı Doğrulaması
@@ -60,7 +86,7 @@ def run_quiz_agent(topic: Optional[str] = None, auto_host: bool = False, headles
     # 2. Quiz.com Oturum Doğrulaması (Yoksa otomatik tarayıcı açıp kaydettirir)
     ensure_quizcom_session()
     
-    # 3. Konu Alımı
+    # 3. Konu ve Zorluk Seviyesi Alımı
     if not topic:
         print("\nAgent hazır! Bana dilediğiniz herhangi bir konu veya konuları söyleyin.")
         topic = input("👉 Quiz Konusu: ").strip()
@@ -69,21 +95,30 @@ def run_quiz_agent(topic: Optional[str] = None, auto_host: bool = False, headles
         print("[Hata] Bir konu belirtilmedi. Çıkılıyor.")
         return
 
+    if difficulty is None or difficulty not in DIFFICULTY_PRESETS:
+        difficulty = ask_difficulty_level(default=4)
+
+    preset = DIFFICULTY_PRESETS[difficulty]
     print(f"\n[1/3] Konu alındı: '{topic}'", flush=True)
-    print("Gemini API ile 20 adet eğlenceli basit-orta soru üretiliyor...", flush=True)
+    print(f"🎯 Seçilen Zorluk: {preset['name']} ({preset['description']})", flush=True)
+    print("Gemini API ile sorular üretiliyor ve harmanlanıyor...", flush=True)
     
     try:
-        quiz_data = generate_quiz_questions(topic=topic, question_count=config.QUIZ_QUESTION_COUNT)
+        quiz_data = generate_quiz_questions(
+            topic=topic,
+            question_count=config.QUIZ_QUESTION_COUNT,
+            difficulty_choice=difficulty
+        )
         print(f"✅ {len(quiz_data.questions)} adet soru ve Giphy etiketleri başarıyla üretildi!", flush=True)
         print(f"📌 Yarışma Başlığı: {quiz_data.title}", flush=True)
     except Exception as e:
         print(f"\n[Hata] Soru üretilirken bir problem oluştu: {e}", flush=True)
         return
 
-    # Soruların kısa özeti
+    # Soruların kısa özeti (Zorluk seviyesi etiketiyle birlikte)
     print("\n--- Hazırlanan Sorulardan İlk 3 Tanesi Örnek Olarak: ---", flush=True)
     for i, q in enumerate(quiz_data.questions[:3], 1):
-        print(f"{i}. {q.question} (Doğru Şık: {q.options[q.correct_index]} | GIF: {q.giphy_keyword})", flush=True)
+        print(f"{i}. [{q.difficulty}] {q.question} (Doğru Şık: {q.options[q.correct_index]} | GIF: {q.giphy_keyword})", flush=True)
     print(f"...ve toplam {len(quiz_data.questions)} soru hazırlandı.\n", flush=True)
 
     # 4. Quiz.com Taslak Kaydı
@@ -138,12 +173,19 @@ def run_quiz_agent(topic: Optional[str] = None, auto_host: bool = False, headles
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Quiz Maker Agent - Konudan Canlı Quiz Oyununa")
     parser.add_argument("--topic", "-t", type=str, help="Hazırlanacak quiz konusu")
+    parser.add_argument(
+        "--difficulty", "-d",
+        type=int,
+        choices=range(1, 8),
+        help="Zorluk seviyesi seçimi (1: Kolay, 2: Orta, 3: Zor, 4: Kolay-Orta, 5: Orta-Zor, 6: Kolay-Zor, 7: Kolay-Orta-Zor)"
+    )
     parser.add_argument("--auto-host", action="store_true", help="Onay sormadan doğrudan canlı lobi açar")
     parser.add_argument("--headed", action="store_true", help="Tarayıcıyı görünür şekilde çalıştırır")
     args = parser.parse_args()
 
     run_quiz_agent(
         topic=args.topic,
+        difficulty=args.difficulty,
         auto_host=args.auto_host,
         headless=not args.headed
     )
